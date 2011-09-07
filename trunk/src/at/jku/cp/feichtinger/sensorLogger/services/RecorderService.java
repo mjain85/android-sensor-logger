@@ -26,7 +26,7 @@ import at.jku.cp.feichtinger.sensorLogger.model.ApplicationConstants;
 import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 
 public class RecorderService extends Service {
-	private static final String TAG = "at.jku.cp.feichtinger.acceleromterRecorder.RecorderService";
+	private static final String TAG = RecorderService.class.getCanonicalName();
 	public static boolean isRunning = false;
 
 	private final Binder mBinder = new RecorderBinder();
@@ -35,15 +35,7 @@ public class RecorderService extends Service {
 	private final Map<String, Thread> consumers = new HashMap<String, Thread>();
 	private final Map<String, Sensor> sensors = new HashMap<String, Sensor>();
 
-	private final BlockingQueue<SensorEvent> accelerationData = new LinkedBlockingQueue<SensorEvent>();
-	private final BlockingQueue<SensorEvent> gravityData = new LinkedBlockingQueue<SensorEvent>();
-
 	private SensorManager sensorManager;
-	private Sensor accelerometerSensor;
-	private Sensor gravitySensor;
-
-	private Thread gravityWriterThread;
-	private Thread accelerometerWriterThread;
 
 	/**
 	 * Listens for accelerometer events and stores them.
@@ -51,15 +43,13 @@ public class RecorderService extends Service {
 	private final SensorEventListener sensorEventListener = new SensorEventListener() {
 		@Override
 		public void onSensorChanged(final SensorEvent event) {
-			if (event.sensor.getType() == Sensor.TYPE_LINEAR_ACCELERATION) {
+
+			final EnumeratedSensor sensor = EnumeratedSensor.fromId(event.sensor.getType());
+			final BlockingQueue<SensorEvent> dataQueue = data.get(sensor.getKey());
+
+			if (dataQueue != null) {
 				try {
-					accelerationData.put(event);
-				} catch (final InterruptedException e) {
-					e.printStackTrace();
-				}
-			} else if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
-				try {
-					gravityData.put(event);
+					dataQueue.put(event);
 				} catch (final InterruptedException e) {
 					e.printStackTrace();
 				}
@@ -95,37 +85,25 @@ public class RecorderService extends Service {
 	@Override
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
 		showToast("service started");
-		accelerometerSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
-		gravitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
-
-		sensorManager.registerListener(sensorEventListener, accelerometerSensor, SensorManager.SENSOR_DELAY_NORMAL);
-		sensorManager.registerListener(sensorEventListener, gravitySensor, SensorManager.SENSOR_DELAY_NORMAL);
 
 		finished = false;
 		isRunning = true;
 
 		try {
-
 			final String[] activeSensors = intent.getExtras().getStringArray(ApplicationConstants.ACTIVE_SENSORS);
 			for (final String key : activeSensors) {
 				final EnumeratedSensor enumSensor = EnumeratedSensor.fromKey(key);
 				final LinkedBlockingQueue<SensorEvent> dataQueue = new LinkedBlockingQueue<SensorEvent>();
-				final Consumer consumer = new Consumer(dataQueue, getFileName(key));
+				final Thread consumer = new Thread(new Consumer(dataQueue, getFileName(key)));
 				final Sensor sensor = sensorManager.getDefaultSensor(enumSensor.getSensorId());
 
 				data.put(key, dataQueue);
 				sensors.put(key, sensor);
-				consumers.put(key, new Thread(consumer));
+				consumers.put(key, consumer);
 
+				consumer.start();
 				sensorManager.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
 			}
-
-			accelerometerWriterThread = new Thread(new Consumer(accelerationData,
-					getFileName(accelerometerSensor.getName())));
-			gravityWriterThread = new Thread(new Consumer(gravityData, getFileName(gravitySensor.getName())));
-
-			accelerometerWriterThread.start();
-			gravityWriterThread.start();
 		} catch (final IOException e) {
 			Log.e(TAG, e.getMessage(), e);
 		}
@@ -154,9 +132,9 @@ public class RecorderService extends Service {
 		sensorManager.unregisterListener(sensorEventListener);
 		Log.i(TAG, "setting finished to true");
 		finished = true;
-		accelerometerWriterThread.interrupt();
-		gravityWriterThread.interrupt();
-
+		for (Thread t : consumers.values()) {
+			t.interrupt();
+		}
 		showToast("service stopped");
 		isRunning = false;
 	}

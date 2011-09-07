@@ -33,4 +33,13 @@ public enum EnumeratedSensor implements Serializable {
 
 		return null;
 	}
+
+	public static EnumeratedSensor fromId(int id) {
+		if (id == Sensor.TYPE_GRAVITY)
+			return GRAVITY;
+		else if (id == Sensor.TYPE_LINEAR_ACCELERATION)
+			return LINEAR_ACCELERATION;
+
+		return null;
+	}
 }
