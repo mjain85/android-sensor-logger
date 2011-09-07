@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceCategory android:title="Sensors">
+		<CheckBoxPreference android:title="Linear acceleration"
+			android:defaultValue="true"
+			android:summary="Check this if you want to log linear acceleration."
+			android:key="linear_acceleration" />
+		<CheckBoxPreference android:title="Gravity"
+			android:defaultValue="true" android:summary="Check this if you want to log gravity."
+			android:key="gravity" />
+	</PreferenceCategory>
+
+	<PreferenceCategory android:title="Logging settings">
+		<ListPreference android:title="Rate"
+			android:summary="Choose the logging rate." android:key="ratePreference"
+			android:defaultValue="Normal" android:entries="@array/loggingRatesArray"
+			android:entryValues="@array/loggingRatesValues" />
+	</PreferenceCategory>
+
+</PreferenceScreen>
