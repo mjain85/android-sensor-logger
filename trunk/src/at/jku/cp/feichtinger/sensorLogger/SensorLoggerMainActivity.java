@@ -20,6 +20,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ToggleButton;
 import at.jku.cp.feichtinger.sensorLogger.activities.PreferencesActivity;
 import at.jku.cp.feichtinger.sensorLogger.activities.SensorVisualizerActivity;
 import at.jku.cp.feichtinger.sensorLogger.model.ApplicationConstants;
@@ -30,7 +31,8 @@ public class SensorLoggerMainActivity extends Activity {
 	private ArrayAdapter<EnumeratedSensor> listAdapter;
 	private List<EnumeratedSensor> activeSensors;
 
-	private ImageView recordingButton;
+	// private ImageView recordingButton;
+	private ToggleButton recordingButton;
 	private ListView sensorList;
 
 	/* ********************************************
@@ -136,7 +138,8 @@ public class SensorLoggerMainActivity extends Activity {
 
 	private void initUI() {
 		listAdapter = new ArrayAdapter<EnumeratedSensor>(this, android.R.layout.simple_list_item_1);
-		recordingButton = (ImageView) findViewById(R.id.recordingButton);
+		// recordingButton = (ImageView) findViewById(R.id.recordingButton);
+		recordingButton = (ToggleButton) findViewById(R.id.recordingButton);
 		sensorList = (ListView) findViewById(R.id.sensorList);
 		sensorList.setOnItemClickListener(listViewClickListener);
 	}
@@ -148,8 +151,12 @@ public class SensorLoggerMainActivity extends Activity {
 	public void toggleRecording(final View view) {
 		if (RecorderService.isRunning) {
 			stopService();
+			recordingButton.setSelected(false);
+			// recordingButton.setImageResource(R.drawable.recorddisabled);
 		} else {
 			startService();
+			recordingButton.setSelected(true);
+			// recordingButton.setImageResource(R.drawable.recordpressed);
 		}
 	}
 
@@ -164,7 +171,6 @@ public class SensorLoggerMainActivity extends Activity {
 	 */
 	private boolean stopService() {
 		stopService(new Intent(SensorLoggerMainActivity.this, RecorderService.class));
-		recordingButton.setImageResource(R.drawable.recorddisabled);
 		return false;
 	}
 
@@ -184,7 +190,7 @@ public class SensorLoggerMainActivity extends Activity {
 
 		intent.putExtra(ApplicationConstants.ACTIVE_SENSORS, activeSensors);
 		startService(intent);
-		recordingButton.setImageResource(R.drawable.recordpressed);
+
 		return true;
 	}
 }
