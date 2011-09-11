@@ -3,14 +3,13 @@ package at.jku.cp.feichtinger.sensorLogger;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.achartengine.chartdemo.demo.R;
-
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -18,7 +17,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.ToggleButton;
 import at.jku.cp.feichtinger.sensorLogger.activities.PreferencesActivity;
@@ -28,6 +26,7 @@ import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 import at.jku.cp.feichtinger.sensorLogger.services.RecorderService;
 
 public class SensorLoggerMainActivity extends Activity {
+	private static final String TAG = "at.jku.cp.feichtinger.sensorLogger.SensorLoggerMainActivity";
 	private ArrayAdapter<EnumeratedSensor> listAdapter;
 	private List<EnumeratedSensor> activeSensors;
 
@@ -45,6 +44,7 @@ public class SensorLoggerMainActivity extends Activity {
 		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
 			if (key.equals(EnumeratedSensor.GRAVITY.getKey())
 					|| key.equals(EnumeratedSensor.LINEAR_ACCELERATION.getKey())) {
+
 				final boolean checked = sharedPreferences.getBoolean(key, false);
 				if (checked) {
 					activeSensors.add(EnumeratedSensor.fromKey(key));
@@ -60,6 +60,7 @@ public class SensorLoggerMainActivity extends Activity {
 	final OnItemClickListener listViewClickListener = new OnItemClickListener() {
 		@Override
 		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+			// start a sensor visualizer activity for the selected sensor
 			final Intent intent = new Intent(SensorLoggerMainActivity.this, SensorVisualizerActivity.class);
 			intent.putExtra(ApplicationConstants.SENSOR, listAdapter.getItem(position));
 			startActivity(intent);
@@ -106,19 +107,9 @@ public class SensorLoggerMainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		initSensors();
 		initUI();
-
-		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		prefs.registerOnSharedPreferenceChangeListener(preferencesChangedListener);
-
-		for (final EnumeratedSensor sensor : activeSensors) {
-			final boolean checked = prefs.getBoolean(sensor.getKey(), false);
-			if (checked) {
-				listAdapter.add(sensor);
-			}
-		}
-		sensorList.setAdapter(listAdapter);
+		final SharedPreferences prefs = initPreferences();
+		initSensors(prefs);
 	}
 
 	@Override
@@ -130,18 +121,34 @@ public class SensorLoggerMainActivity extends Activity {
 	 * initialization
 	 */
 
-	private void initSensors() {
+	private void initSensors(final SharedPreferences prefs) {
 		activeSensors = new ArrayList<EnumeratedSensor>();
-		activeSensors.add(EnumeratedSensor.GRAVITY);
-		activeSensors.add(EnumeratedSensor.LINEAR_ACCELERATION);
+
+		if (prefs.getBoolean(EnumeratedSensor.GRAVITY.getKey(), false)) {
+			activeSensors.add(EnumeratedSensor.GRAVITY);
+			listAdapter.add(EnumeratedSensor.GRAVITY);
+		}
+
+		if (prefs.getBoolean(EnumeratedSensor.LINEAR_ACCELERATION.getKey(), false)) {
+			activeSensors.add(EnumeratedSensor.LINEAR_ACCELERATION);
+			listAdapter.add(EnumeratedSensor.LINEAR_ACCELERATION);
+		}
+	}
+
+	private SharedPreferences initPreferences() {
+		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		prefs.registerOnSharedPreferenceChangeListener(preferencesChangedListener);
+		return prefs;
 	}
 
 	private void initUI() {
 		listAdapter = new ArrayAdapter<EnumeratedSensor>(this, android.R.layout.simple_list_item_1);
-		// recordingButton = (ImageView) findViewById(R.id.recordingButton);
-		recordingButton = (ToggleButton) findViewById(R.id.recordingButton);
 		sensorList = (ListView) findViewById(R.id.sensorList);
 		sensorList.setOnItemClickListener(listViewClickListener);
+		// sensorList.addHeaderView(findViewById(R.id.headerId));
+		sensorList.setAdapter(listAdapter);
+		// recordingButton = (ImageView) findViewById(R.id.recordingButton);
+		recordingButton = (ToggleButton) findViewById(R.id.recordingButton);
 	}
 
 	/* *****************************************
@@ -149,7 +156,8 @@ public class SensorLoggerMainActivity extends Activity {
 	 */
 
 	public void toggleRecording(final View view) {
-		if (RecorderService.isRunning) {
+		Log.i(TAG, "[Main] toggleRecording called.");
+		if (RecorderService.isRunning()) {
 			stopService();
 			recordingButton.setSelected(false);
 			// recordingButton.setImageResource(R.drawable.recorddisabled);

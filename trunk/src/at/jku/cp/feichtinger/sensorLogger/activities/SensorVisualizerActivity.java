@@ -4,7 +4,6 @@ import java.io.Serializable;
 
 import org.achartengine.ChartFactory;
 import org.achartengine.GraphicalView;
-import org.achartengine.chartdemo.demo.R;
 import org.achartengine.model.XYMultipleSeriesDataset;
 import org.achartengine.model.XYSeries;
 import org.achartengine.renderer.XYMultipleSeriesRenderer;
@@ -28,6 +27,7 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
+import at.jku.cp.feichtinger.sensorLogger.R;
 import at.jku.cp.feichtinger.sensorLogger.model.ApplicationConstants;
 import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 

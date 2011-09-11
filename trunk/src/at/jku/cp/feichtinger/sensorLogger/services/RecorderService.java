@@ -13,6 +13,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -20,22 +21,25 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.PowerManager;
+import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
 import at.jku.cp.feichtinger.sensorLogger.model.ApplicationConstants;
 import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 
 public class RecorderService extends Service {
-	private static final String TAG = RecorderService.class.getCanonicalName();
-	public static boolean isRunning = false;
+	private static final String TAG = "at.jku.cp.feichtinger.sensorLogger.services.RecorderService";
 
-	private final Binder mBinder = new RecorderBinder();
+	private static boolean isRunning = false;
 
 	private final Map<String, BlockingQueue<SensorEvent>> data = new HashMap<String, BlockingQueue<SensorEvent>>();
 	private final Map<String, Thread> consumers = new HashMap<String, Thread>();
 	private final Map<String, Sensor> sensors = new HashMap<String, Sensor>();
 
+	private final Binder mBinder = new RecorderBinder();
 	private SensorManager sensorManager;
+	private long startTime;
 
 	/**
 	 * Listens for accelerometer events and stores them.
@@ -43,7 +47,7 @@ public class RecorderService extends Service {
 	private final SensorEventListener sensorEventListener = new SensorEventListener() {
 		@Override
 		public void onSensorChanged(final SensorEvent event) {
-
+			Log.i(TAG, "onSensorChanged called");
 			final EnumeratedSensor sensor = EnumeratedSensor.fromId(event.sensor.getType());
 			final BlockingQueue<SensorEvent> dataQueue = data.get(sensor.getKey());
 
@@ -61,6 +65,10 @@ public class RecorderService extends Service {
 			// TODO
 		}
 	};
+
+	public static boolean isRunning() {
+		return isRunning;
+	}
 
 	/* ***************************************************************
 	 * service life-cycle methods
@@ -88,6 +96,21 @@ public class RecorderService extends Service {
 
 		finished = false;
 		isRunning = true;
+		startTime = SystemClock.uptimeMillis();
+
+		/**
+		 * Acquire a partial wakelock in order to allow for sensor event logging
+		 * when the user presses the power button. see Android documentation: If
+		 * you hold a partial wakelock, the CPU will continue to run,
+		 * irrespective of any timers and even after the user presses the power
+		 * button. In all other wakelocks, the CPU will run, but the user can
+		 * still put the device to sleep using the power button.
+		 */
+		final PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+		partialWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, TAG);
+		synchronized (this) {
+			partialWakeLock.acquire();
+		}
 
 		try {
 			final String[] activeSensors = intent.getExtras().getStringArray(ApplicationConstants.ACTIVE_SENSORS);
@@ -102,7 +125,7 @@ public class RecorderService extends Service {
 				consumers.put(key, consumer);
 
 				consumer.start();
-				sensorManager.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_NORMAL);
+				sensorManager.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
 			}
 		} catch (final IOException e) {
 			Log.e(TAG, e.getMessage(), e);
@@ -128,15 +151,26 @@ public class RecorderService extends Service {
 	 */
 	@Override
 	public void onDestroy() {
-		Log.i(TAG, "onDestroy called");
+		Log.i(TAG, "[RecorderService] onDestroy called");
+		// unregister all listeners
 		sensorManager.unregisterListener(sensorEventListener);
-		Log.i(TAG, "setting finished to true");
+
+		// stop all consumer threads
 		finished = true;
 		for (Thread t : consumers.values()) {
 			t.interrupt();
 		}
-		showToast("service stopped");
+
+		// release the wake lock
+		synchronized (this) {
+			partialWakeLock.release();
+		}
+
+		// update state
 		isRunning = false;
+
+		// show a toast that the service has been stopped
+		showToast("service stopped");
 	}
 
 	/* ***************************************************************
@@ -155,8 +189,8 @@ public class RecorderService extends Service {
 	}
 
 	private String getFileName(final String sensorName) {
-		final DateFormat dateFormat = new SimpleDateFormat("ddMMyy_hhmmss");
-		return sensorName + "_" + dateFormat.format(new Date()) + ".csv";
+		final DateFormat dateFormat = new SimpleDateFormat("dd-MM-yy_HH-mm-ss");
+		return dateFormat.format(new Date()) + "_" + sensorName + ".csv";
 	}
 
 	/* ***************************************************************
@@ -165,6 +199,8 @@ public class RecorderService extends Service {
 
 	// consumer threads will check this variable
 	private volatile boolean finished = false;
+
+	private PowerManager.WakeLock partialWakeLock;
 
 	/**
 	 * Writes the contents of the specified queue to the specified file.
@@ -221,7 +257,8 @@ public class RecorderService extends Service {
 		}
 
 		private String toCSVString(final SensorEvent event) {
-			return (event.timestamp) + "," + event.values[0] + ", " + event.values[1] + "," + event.values[2] + "\n";
+			return (event.timestamp / (1000 * 1000) - startTime) + "," + event.values[0] + ", " + event.values[1] + ","
+					+ event.values[2] + "\n";
 		}
 	}
 

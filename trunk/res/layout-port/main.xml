@@ -4,27 +4,23 @@
 	android:orientation="vertical">
 
 	<FrameLayout android:id="@+id/recordingFrame"
-		android:layout_width="match_parent" android:layout_height="100dp" android:layout_gravity="center">
-		<!-- <ImageView android:src="@drawable/recorddisabled" -->
-		<!-- android:id="@+id/recordingButton" android:layout_height="wrap_content" -->
-		<!-- android:gravity="center" android:onClick="toggleRecording" -->
-		<!-- android:hapticFeedbackEnabled="true" android:layout_width="match_parent" 
-			/> -->
+		android:layout_width="match_parent" android:layout_height="100dp"
+		android:layout_gravity="center">
 		<ToggleButton android:id="@+id/recordingButton"
 			android:layout_height="wrap_content" android:gravity="center"
 			android:onClick="toggleRecording" android:hapticFeedbackEnabled="true"
-			android:layout_width="match_parent" android:layout_gravity="center"/>
+			android:layout_width="match_parent" android:layout_gravity="center" />
 	</FrameLayout>
 
-	<TextView android:text="@string/active_sensors"
-		android:layout_width="fill_parent" android:layout_height="wrap_content"
-		android:background="@android:drawable/dark_header" />
+	<TextView android:id="@+id/headerId" android:layout_width="fill_parent"
+		android:layout_height="wrap_content" android:text="this contains the header data" />
 
 	<LinearLayout android:layout_height="fill_parent"
 		android:layout_width="fill_parent" android:orientation="horizontal"
 		android:layout_weight="1">
+
 		<ListView android:id="@+id/sensorList" android:layout_height="fill_parent"
-			android:layout_width="fill_parent"></ListView>
+			android:headerDividersEnabled="true" android:layout_width="fill_parent" />
 	</LinearLayout>
 
 </LinearLayout>
