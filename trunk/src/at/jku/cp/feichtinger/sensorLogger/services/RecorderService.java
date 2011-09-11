@@ -33,9 +33,9 @@ public class RecorderService extends Service {
 
 	private static boolean isRunning = false;
 
-	private final Map<String, BlockingQueue<SensorEvent>> data = new HashMap<String, BlockingQueue<SensorEvent>>();
-	private final Map<String, Thread> consumers = new HashMap<String, Thread>();
-	private final Map<String, Sensor> sensors = new HashMap<String, Sensor>();
+	private Map<String, BlockingQueue<SensorEvent>> data;
+	private Map<String, Thread> consumers;
+	private Map<String, Sensor> sensors;
 
 	private final Binder mBinder = new RecorderBinder();
 	private SensorManager sensorManager;
@@ -82,6 +82,9 @@ public class RecorderService extends Service {
 	public void onCreate() {
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
+		data = new HashMap<String, BlockingQueue<SensorEvent>>();
+		consumers = new HashMap<String, Thread>();
+		sensors = new HashMap<String, Sensor>();
 	}
 
 	/**
@@ -257,6 +260,8 @@ public class RecorderService extends Service {
 		}
 
 		private String toCSVString(final SensorEvent event) {
+			// nano-seconds are too fine grained --> convert it to
+			// milli-seconds.
 			return (event.timestamp / (1000 * 1000) - startTime) + "," + event.values[0] + ", " + event.values[1] + ","
 					+ event.values[2] + "\n";
 		}
