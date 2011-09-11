@@ -25,7 +25,7 @@ import android.os.PowerManager;
 import android.os.SystemClock;
 import android.util.Log;
 import android.widget.Toast;
-import at.jku.cp.feichtinger.sensorLogger.model.ApplicationConstants;
+import at.jku.cp.feichtinger.sensorLogger.ApplicationConstants;
 import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 
 public class RecorderService extends Service {
@@ -157,7 +157,7 @@ public class RecorderService extends Service {
 
 		// stop all consumer threads
 		finished = true;
-		for (Thread t : consumers.values()) {
+		for (final Thread t : consumers.values()) {
 			t.interrupt();
 		}
 

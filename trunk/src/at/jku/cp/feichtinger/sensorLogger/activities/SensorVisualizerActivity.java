@@ -27,8 +27,8 @@ import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import android.widget.TextView;
 import android.widget.ViewFlipper;
+import at.jku.cp.feichtinger.sensorLogger.ApplicationConstants;
 import at.jku.cp.feichtinger.sensorLogger.R;
-import at.jku.cp.feichtinger.sensorLogger.model.ApplicationConstants;
 import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 
 public class SensorVisualizerActivity extends Activity {

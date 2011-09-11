@@ -21,7 +21,6 @@ import android.widget.ListView;
 import android.widget.ToggleButton;
 import at.jku.cp.feichtinger.sensorLogger.activities.PreferencesActivity;
 import at.jku.cp.feichtinger.sensorLogger.activities.SensorVisualizerActivity;
-import at.jku.cp.feichtinger.sensorLogger.model.ApplicationConstants;
 import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 import at.jku.cp.feichtinger.sensorLogger.services.RecorderService;
 
@@ -42,8 +41,7 @@ public class SensorLoggerMainActivity extends Activity {
 
 		@Override
 		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-			if (key.equals(EnumeratedSensor.GRAVITY.getKey())
-					|| key.equals(EnumeratedSensor.LINEAR_ACCELERATION.getKey())) {
+			if (isSupportedSensor(key)) {
 
 				final boolean checked = sharedPreferences.getBoolean(key, false);
 				if (checked) {
@@ -59,7 +57,7 @@ public class SensorLoggerMainActivity extends Activity {
 
 	final OnItemClickListener listViewClickListener = new OnItemClickListener() {
 		@Override
-		public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+		public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
 			// start a sensor visualizer activity for the selected sensor
 			final Intent intent = new Intent(SensorLoggerMainActivity.this, SensorVisualizerActivity.class);
 			intent.putExtra(ApplicationConstants.SENSOR, listAdapter.getItem(position));
@@ -133,6 +131,11 @@ public class SensorLoggerMainActivity extends Activity {
 			activeSensors.add(EnumeratedSensor.LINEAR_ACCELERATION);
 			listAdapter.add(EnumeratedSensor.LINEAR_ACCELERATION);
 		}
+
+		if (prefs.getBoolean(EnumeratedSensor.GYROSCOPE.getKey(), false)) {
+			activeSensors.add(EnumeratedSensor.GYROSCOPE);
+			listAdapter.add(EnumeratedSensor.GYROSCOPE);
+		}
 	}
 
 	private SharedPreferences initPreferences() {
@@ -200,5 +203,22 @@ public class SensorLoggerMainActivity extends Activity {
 		startService(intent);
 
 		return true;
+	}
+
+	/**
+	 * Checks whether a sensor is supported by this application or not.
+	 * 
+	 * @param key
+	 *            the sensor key
+	 * @return true if the sensor is supported, false otherwise
+	 */
+	private boolean isSupportedSensor(final String key) {
+		final EnumeratedSensor[] values = EnumeratedSensor.values();
+		for (final EnumeratedSensor s : values) {
+			if (s.getKey() == key) {
+				return true;
+			}
+		}
+		return false;
 	}
 }

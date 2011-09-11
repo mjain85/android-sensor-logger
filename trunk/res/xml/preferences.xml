@@ -8,6 +8,9 @@
 		<CheckBoxPreference android:title="Gravity"
 			android:defaultValue="true" android:summary="Check this if you want to log gravity."
 			android:key="gravity" />
+		<CheckBoxPreference android:title="Gyroscope"
+			android:defaultValue="true" android:summary="Check this if you want to log gyroscope data."
+			android:key="gyroscope" />
 	</PreferenceCategory>
 
 	<PreferenceCategory android:title="Logging settings">
