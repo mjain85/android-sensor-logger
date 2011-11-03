@@ -35,7 +35,7 @@ public class SensorLoggerMainActivity extends Activity {
 	 */
 	final OnSharedPreferenceChangeListener onSharedPreferenceChangeListener = new OnSharedPreferenceChangeListener() {
 		@Override
-		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
 			updateSensorList();
 		}
 	};
@@ -90,8 +90,6 @@ public class SensorLoggerMainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
-		listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
-
 		initUI();
 	}
 
@@ -115,11 +113,12 @@ public class SensorLoggerMainActivity extends Activity {
 	 */
 
 	private void updateSensorList() {
+		listAdapter.clear();
 		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 		final SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 		final List<Sensor> sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL);
 
-		for (Sensor s : sensorList) {
+		for (final Sensor s : sensorList) {
 			if (prefs.getBoolean(s.getName(), false)) {
 				listAdapter.add(s.getName());
 			}
@@ -130,9 +129,11 @@ public class SensorLoggerMainActivity extends Activity {
 		sensorList = (ListView) findViewById(R.id.sensorList);
 		sensorList.setOnItemClickListener(listViewClickListener);
 		// sensorList.addHeaderView(findViewById(R.id.headerId));
+		listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
 		sensorList.setAdapter(listAdapter);
 		// recordingButton = (ImageView) findViewById(R.id.recordingButton);
 		recordingButton = (ToggleButton) findViewById(R.id.recordingButton);
+		updateSensorList();
 	}
 
 	/* *****************************************

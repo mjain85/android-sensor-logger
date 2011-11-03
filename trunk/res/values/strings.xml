@@ -6,4 +6,10 @@
 	<string name="sensor_data">Sensor data:</string>
 	<string name="linear_acceleration">Linear acceleration</string>
 	<string name="gravity">Gravity</string>
+
+	<string name="logging_rate">Logging rate</string>
+	<string name="logging_rate_fastest">Fastest</string>
+	<string name="logging_rate_game">Game</string>
+	<string name="logging_rate_normal">Normal</string>
+	<string name="logging_rate_ui">Slowest</string>
 </resources>

@@ -28,6 +28,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
+import at.jku.cp.feichtinger.sensorLogger.ApplicationConstants;
 
 public class RecorderService extends Service {
 	private static final String TAG = "at.jku.cp.feichtinger.sensorLogger.services.RecorderService";
@@ -130,7 +131,9 @@ public class RecorderService extends Service {
 					consumers.put(sensor.getType(), consumer);
 
 					consumer.start();
-					sensorManager.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+					int delay = Integer.parseInt(prefs.getString(ApplicationConstants.PREF_RATE,
+							SensorManager.SENSOR_DELAY_NORMAL + ""));
+					sensorManager.registerListener(sensorEventListener, sensor, delay);
 				}
 			}
 		} catch (final IOException e) {

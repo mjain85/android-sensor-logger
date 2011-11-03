@@ -1,15 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<PreferenceCategory android:key="sensors"
-	android:title="Sensors">
+	<PreferenceCategory android:key="sensorsCategory"
+		android:title="Sensors" />
 
-	</PreferenceCategory>
-
-	<PreferenceCategory android:title="Logging settings">
-		<ListPreference android:title="Rate"
-			android:summary="Choose the logging rate." android:key="ratePreference"
-			android:defaultValue="Normal" android:entries="@array/loggingRatesArray"
-			android:entryValues="@array/loggingRatesValues" />
-	</PreferenceCategory>
+	<PreferenceCategory android:key="rateCategory"
+		android:title="Logging settings" />
 
 </PreferenceScreen>
