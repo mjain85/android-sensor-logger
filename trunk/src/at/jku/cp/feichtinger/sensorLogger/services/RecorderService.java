@@ -96,7 +96,7 @@ public class RecorderService extends Service {
 	 */
 	@Override
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
-		showToast("service started");
+		showToast("logging started");
 
 		finished = false;
 		isRunning = true;
@@ -179,7 +179,7 @@ public class RecorderService extends Service {
 		isRunning = false;
 
 		// show a toast that the service has been stopped
-		showToast("service stopped");
+		showToast("logging stopped");
 	}
 
 	/* ***************************************************************
@@ -222,14 +222,10 @@ public class RecorderService extends Service {
 
 	private class Consumer implements Runnable {
 		private final BlockingQueue<SensorEvent> queue;
-		private final BufferedWriter out;
+		private BufferedWriter out;
 
 		public Consumer(final BlockingQueue<SensorEvent> queue, final String fileName) throws IOException {
-			final File file = new File(getExternalFilesDir(null), fileName);
-			if (!file.exists()) {
-				file.createNewFile();
-			}
-			this.out = new BufferedWriter(new FileWriter(file));
+			this.setFile(fileName);
 			this.queue = queue;
 		}
 
@@ -262,6 +258,21 @@ public class RecorderService extends Service {
 				Log.e(TAG, e.getMessage(), e);
 			} catch (final InterruptedException e) {
 				Log.e(TAG, e.getMessage(), e);
+			}
+		}
+
+		private void setFile(final String fileName) {
+			try {
+				if (out != null) {
+					out.close();
+				}
+				final File file = new File(getExternalFilesDir(null), fileName);
+				if (!file.exists()) {
+					file.createNewFile();
+				}
+				out = new BufferedWriter(new FileWriter(file));
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
 		}
 
