@@ -1,16 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-	<PreferenceCategory android:title="Sensors">
-		<CheckBoxPreference android:title="Linear acceleration"
-			android:defaultValue="true"
-			android:summary="Check this if you want to log linear acceleration."
-			android:key="linear_acceleration" />
-		<CheckBoxPreference android:title="Gravity"
-			android:defaultValue="true" android:summary="Check this if you want to log gravity."
-			android:key="gravity" />
-		<CheckBoxPreference android:title="Gyroscope"
-			android:defaultValue="true" android:summary="Check this if you want to log gyroscope data."
-			android:key="gyroscope" />
+	<PreferenceCategory android:key="sensors"
+	android:title="Sensors">
+
 	</PreferenceCategory>
 
 	<PreferenceCategory android:title="Logging settings">

@@ -8,6 +8,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,6 +16,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -23,19 +25,18 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.SystemClock;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.Toast;
-import at.jku.cp.feichtinger.sensorLogger.ApplicationConstants;
-import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 
 public class RecorderService extends Service {
 	private static final String TAG = "at.jku.cp.feichtinger.sensorLogger.services.RecorderService";
 
 	private static boolean isRunning = false;
 
-	private Map<String, BlockingQueue<SensorEvent>> data;
-	private Map<String, Thread> consumers;
-	private Map<String, Sensor> sensors;
+	private Map<Integer, BlockingQueue<SensorEvent>> data;
+	private Map<Integer, Thread> consumers;
+	private Map<Integer, Sensor> sensors;
 
 	private final Binder mBinder = new RecorderBinder();
 	private SensorManager sensorManager;
@@ -48,8 +49,7 @@ public class RecorderService extends Service {
 		@Override
 		public void onSensorChanged(final SensorEvent event) {
 			Log.i(TAG, "onSensorChanged called");
-			final EnumeratedSensor sensor = EnumeratedSensor.fromId(event.sensor.getType());
-			final BlockingQueue<SensorEvent> dataQueue = data.get(sensor.getKey());
+			final BlockingQueue<SensorEvent> dataQueue = data.get(event.sensor.getType());
 
 			if (dataQueue != null) {
 				try {
@@ -82,9 +82,9 @@ public class RecorderService extends Service {
 	public void onCreate() {
 		sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-		data = new HashMap<String, BlockingQueue<SensorEvent>>();
-		consumers = new HashMap<String, Thread>();
-		sensors = new HashMap<String, Sensor>();
+		data = new HashMap<Integer, BlockingQueue<SensorEvent>>();
+		consumers = new HashMap<Integer, Thread>();
+		sensors = new HashMap<Integer, Sensor>();
 	}
 
 	/**
@@ -115,20 +115,23 @@ public class RecorderService extends Service {
 			partialWakeLock.acquire();
 		}
 
+		final SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+		final List<Sensor> sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL);
+		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+
 		try {
-			final String[] activeSensors = intent.getExtras().getStringArray(ApplicationConstants.ACTIVE_SENSORS);
-			for (final String key : activeSensors) {
-				final EnumeratedSensor enumSensor = EnumeratedSensor.fromKey(key);
-				final LinkedBlockingQueue<SensorEvent> dataQueue = new LinkedBlockingQueue<SensorEvent>();
-				final Thread consumer = new Thread(new Consumer(dataQueue, getFileName(key)));
-				final Sensor sensor = sensorManager.getDefaultSensor(enumSensor.getSensorId());
+			for (final Sensor sensor : sensorList) {
+				if (prefs.getBoolean(sensor.getName(), false)) {
+					final LinkedBlockingQueue<SensorEvent> dataQueue = new LinkedBlockingQueue<SensorEvent>();
+					final Thread consumer = new Thread(new Consumer(dataQueue, getFileName(sensor.getName())));
 
-				data.put(key, dataQueue);
-				sensors.put(key, sensor);
-				consumers.put(key, consumer);
+					data.put(sensor.getType(), dataQueue);
+					sensors.put(sensor.getType(), sensor);
+					consumers.put(sensor.getType(), consumer);
 
-				consumer.start();
-				sensorManager.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+					consumer.start();
+					sensorManager.registerListener(sensorEventListener, sensor, SensorManager.SENSOR_DELAY_FASTEST);
+				}
 			}
 		} catch (final IOException e) {
 			Log.e(TAG, e.getMessage(), e);

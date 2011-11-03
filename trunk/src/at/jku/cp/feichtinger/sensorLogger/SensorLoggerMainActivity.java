@@ -1,12 +1,13 @@
 package at.jku.cp.feichtinger.sensorLogger;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -20,15 +21,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.ToggleButton;
 import at.jku.cp.feichtinger.sensorLogger.activities.PreferencesActivity;
-import at.jku.cp.feichtinger.sensorLogger.activities.SensorVisualizerActivity;
-import at.jku.cp.feichtinger.sensorLogger.model.EnumeratedSensor;
 import at.jku.cp.feichtinger.sensorLogger.services.RecorderService;
 
 public class SensorLoggerMainActivity extends Activity {
 	private static final String TAG = "at.jku.cp.feichtinger.sensorLogger.SensorLoggerMainActivity";
-	private ArrayAdapter<EnumeratedSensor> listAdapter;
-	private List<EnumeratedSensor> activeSensors;
-
+	private ArrayAdapter<String> listAdapter;
 	// private ImageView recordingButton;
 	private ToggleButton recordingButton;
 	private ListView sensorList;
@@ -36,22 +33,10 @@ public class SensorLoggerMainActivity extends Activity {
 	/* ********************************************
 	 * Listeners
 	 */
-
-	final OnSharedPreferenceChangeListener preferencesChangedListener = new OnSharedPreferenceChangeListener() {
-
+	final OnSharedPreferenceChangeListener onSharedPreferenceChangeListener = new OnSharedPreferenceChangeListener() {
 		@Override
-		public void onSharedPreferenceChanged(final SharedPreferences sharedPreferences, final String key) {
-			if (isSupportedSensor(key)) {
-
-				final boolean checked = sharedPreferences.getBoolean(key, false);
-				if (checked) {
-					activeSensors.add(EnumeratedSensor.fromKey(key));
-					listAdapter.add(EnumeratedSensor.fromKey(key));
-				} else {
-					activeSensors.remove(EnumeratedSensor.fromKey(key));
-					listAdapter.remove(EnumeratedSensor.fromKey(key));
-				}
-			}
+		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+			updateSensorList();
 		}
 	};
 
@@ -59,9 +44,9 @@ public class SensorLoggerMainActivity extends Activity {
 		@Override
 		public void onItemClick(final AdapterView<?> parent, final View view, final int position, final long id) {
 			// start a sensor visualizer activity for the selected sensor
-			final Intent intent = new Intent(SensorLoggerMainActivity.this, SensorVisualizerActivity.class);
-			intent.putExtra(ApplicationConstants.SENSOR, listAdapter.getItem(position));
-			startActivity(intent);
+			// final Intent intent = new Intent(SensorLoggerMainActivity.this,
+			// SensorVisualizerActivity.class);
+			// startActivity(intent);
 		}
 	};
 
@@ -105,47 +90,43 @@ public class SensorLoggerMainActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
 
+		listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
+
 		initUI();
-		final SharedPreferences prefs = initPreferences();
-		initSensors(prefs);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
+		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		prefs.registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
+		updateSensorList();
+	}
+
+	@Override
+	protected void onStop() {
+		super.onStop();
+		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+		prefs.unregisterOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
 	}
 
 	/* *****************************************
 	 * initialization
 	 */
 
-	private void initSensors(final SharedPreferences prefs) {
-		activeSensors = new ArrayList<EnumeratedSensor>();
-
-		if (prefs.getBoolean(EnumeratedSensor.GRAVITY.getKey(), false)) {
-			activeSensors.add(EnumeratedSensor.GRAVITY);
-			listAdapter.add(EnumeratedSensor.GRAVITY);
-		}
-
-		if (prefs.getBoolean(EnumeratedSensor.LINEAR_ACCELERATION.getKey(), false)) {
-			activeSensors.add(EnumeratedSensor.LINEAR_ACCELERATION);
-			listAdapter.add(EnumeratedSensor.LINEAR_ACCELERATION);
-		}
-
-		if (prefs.getBoolean(EnumeratedSensor.GYROSCOPE.getKey(), false)) {
-			activeSensors.add(EnumeratedSensor.GYROSCOPE);
-			listAdapter.add(EnumeratedSensor.GYROSCOPE);
-		}
-	}
-
-	private SharedPreferences initPreferences() {
+	private void updateSensorList() {
 		final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-		prefs.registerOnSharedPreferenceChangeListener(preferencesChangedListener);
-		return prefs;
+		final SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+		final List<Sensor> sensorList = sensorManager.getSensorList(Sensor.TYPE_ALL);
+
+		for (Sensor s : sensorList) {
+			if (prefs.getBoolean(s.getName(), false)) {
+				listAdapter.add(s.getName());
+			}
+		}
 	}
 
 	private void initUI() {
-		listAdapter = new ArrayAdapter<EnumeratedSensor>(this, android.R.layout.simple_list_item_1);
 		sensorList = (ListView) findViewById(R.id.sensorList);
 		sensorList.setOnItemClickListener(listViewClickListener);
 		// sensorList.addHeaderView(findViewById(R.id.headerId));
@@ -192,33 +173,7 @@ public class SensorLoggerMainActivity extends Activity {
 	 */
 	private boolean startService() {
 		final Intent intent = new Intent(SensorLoggerMainActivity.this, RecorderService.class);
-
-		// TODO find better solution
-		final String[] activeSensors = new String[this.activeSensors.size()];
-		for (int i = 0; i < this.activeSensors.size(); i++) {
-			activeSensors[i] = this.activeSensors.get(i).getKey();
-		}
-
-		intent.putExtra(ApplicationConstants.ACTIVE_SENSORS, activeSensors);
 		startService(intent);
-
 		return true;
-	}
-
-	/**
-	 * Checks whether a sensor is supported by this application or not.
-	 * 
-	 * @param key
-	 *            the sensor key
-	 * @return true if the sensor is supported, false otherwise
-	 */
-	private boolean isSupportedSensor(final String key) {
-		final EnumeratedSensor[] values = EnumeratedSensor.values();
-		for (final EnumeratedSensor s : values) {
-			if (s.getKey() == key) {
-				return true;
-			}
-		}
-		return false;
 	}
 }

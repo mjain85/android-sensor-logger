@@ -30,21 +30,4 @@
 		<nature>com.android.ide.eclipse.adt.AndroidNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 	</natures>
-	<linkedResources>
-		<link>
-			<name>AChartEngine_demo</name>
-			<type>2</type>
-			<locationURI>_android_AChartEngine_e4f84bf/demo</locationURI>
-		</link>
-		<link>
-			<name>AChartEngine_src</name>
-			<type>2</type>
-			<locationURI>_android_AChartEngine_e4f84bf/src</locationURI>
-		</link>
-		<link>
-			<name>AChartEngine_test</name>
-			<type>2</type>
-			<locationURI>_android_AChartEngine_e4f84bf/test</locationURI>
-		</link>
-	</linkedResources>
 </projectDescription>
