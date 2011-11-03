@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">Sensor Logger</string>
-	<string name="active_sensors">Active sensors:</string>
+	<string name="active_sensors">List of logged sensors:</string>
 	<string name="settings">Preferences</string>
 	<string name="sensor_data">Sensor data:</string>
 	<string name="linear_acceleration">Linear acceleration</string>
