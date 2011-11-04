@@ -19,4 +19,5 @@
 
 	<!-- Menu strings -->
 	<string name="menu_add_activity">Add activity</string>
+	<string name="menu_delete_activity">Delete activity</string>
 </resources>
