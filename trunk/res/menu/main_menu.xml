@@ -2,4 +2,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 	<item android:id="@+id/settings" android:icon="@android:drawable/ic_menu_preferences"
 		android:title="@string/settings" />
+
+	<item android:id="@+id/manage_activities" android:icon="@android:drawable/ic_menu_edit"
+		android:title="@string/manage_activities" />
 </menu>

@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="app_name">Sensor Logger</string>
+
 	<string name="active_sensors">List of logged sensors:</string>
 	<string name="settings">Preferences</string>
+	<string name="manage_activities">Manage activities</string>
 	<string name="sensor_data">Sensor data:</string>
 	<string name="linear_acceleration">Linear acceleration</string>
 	<string name="gravity">Gravity</string>
@@ -12,4 +14,9 @@
 	<string name="logging_rate_game">Game</string>
 	<string name="logging_rate_normal">Normal</string>
 	<string name="logging_rate_ui">Slowest</string>
+
+	<string name="no_activities">No activities found</string>
+
+	<!-- Menu strings -->
+	<string name="menu_add_activity">Add activity</string>
 </resources>

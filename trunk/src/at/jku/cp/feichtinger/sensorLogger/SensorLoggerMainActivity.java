@@ -12,7 +12,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -21,8 +20,8 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
-import android.widget.Toast;
 import android.widget.ToggleButton;
+import at.jku.cp.feichtinger.sensorLogger.activities.ActivityManagerActivity;
 import at.jku.cp.feichtinger.sensorLogger.activities.PreferencesActivity;
 import at.jku.cp.feichtinger.sensorLogger.services.RecorderService;
 
@@ -65,9 +64,12 @@ public class SensorLoggerMainActivity extends Activity {
 		switch (item.getItemId()) {
 		case R.id.settings:
 			startActivity(new Intent(getBaseContext(), PreferencesActivity.class));
-		default:
-			return super.onOptionsItemSelected(item);
+			break;
+		case R.id.manage_activities:
+			startActivity(new Intent(getBaseContext(), ActivityManagerActivity.class));
+			break;
 		}
+		return super.onOptionsItemSelected(item);
 	}
 
 	/**
