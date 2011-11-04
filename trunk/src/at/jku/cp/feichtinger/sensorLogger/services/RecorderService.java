@@ -42,6 +42,7 @@ public class RecorderService extends Service {
 	private final Binder mBinder = new RecorderBinder();
 	private SensorManager sensorManager;
 	private long startTime;
+	private String activity;
 
 	/**
 	 * Listens for accelerometer events and stores them.
@@ -96,7 +97,8 @@ public class RecorderService extends Service {
 	 */
 	@Override
 	public int onStartCommand(final Intent intent, final int flags, final int startId) {
-		showToast("logging started");
+		activity = (String) intent.getExtras().get(ApplicationConstants.INTENT_ACTIVITY);
+		showToast("Logging started. Activity: " + activity);
 
 		finished = false;
 		isRunning = true;
@@ -131,7 +133,7 @@ public class RecorderService extends Service {
 					consumers.put(sensor.getType(), consumer);
 
 					consumer.start();
-					int delay = Integer.parseInt(prefs.getString(ApplicationConstants.PREF_RATE,
+					final int delay = Integer.parseInt(prefs.getString(ApplicationConstants.PREF_RATE,
 							SensorManager.SENSOR_DELAY_NORMAL + ""));
 					sensorManager.registerListener(sensorEventListener, sensor, delay);
 				}
@@ -227,6 +229,7 @@ public class RecorderService extends Service {
 		public Consumer(final BlockingQueue<SensorEvent> queue, final String fileName) throws IOException {
 			this.setFile(fileName);
 			this.queue = queue;
+			out.write("# Logged activity: " + activity + "\n");
 		}
 
 		@Override
@@ -271,7 +274,7 @@ public class RecorderService extends Service {
 					file.createNewFile();
 				}
 				out = new BufferedWriter(new FileWriter(file));
-			} catch (IOException e) {
+			} catch (final IOException e) {
 				e.printStackTrace();
 			}
 		}

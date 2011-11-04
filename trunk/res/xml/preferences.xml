@@ -3,7 +3,10 @@
 	<PreferenceCategory android:key="sensorsCategory"
 		android:title="Sensors" />
 
-	<PreferenceCategory android:key="rateCategory"
-		android:title="Logging settings" />
+	<PreferenceCategory android:key="loggingCategory"
+		android:title="Logging settings">
+
+		
+	</PreferenceCategory>
 
 </PreferenceScreen>

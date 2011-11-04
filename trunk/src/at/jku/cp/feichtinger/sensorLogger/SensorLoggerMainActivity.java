@@ -3,6 +3,8 @@ package at.jku.cp.feichtinger.sensorLogger;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
@@ -19,6 +21,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import android.widget.Toast;
 import android.widget.ToggleButton;
 import at.jku.cp.feichtinger.sensorLogger.activities.PreferencesActivity;
 import at.jku.cp.feichtinger.sensorLogger.services.RecorderService;
@@ -26,7 +29,6 @@ import at.jku.cp.feichtinger.sensorLogger.services.RecorderService;
 public class SensorLoggerMainActivity extends Activity {
 	private static final String TAG = "at.jku.cp.feichtinger.sensorLogger.SensorLoggerMainActivity";
 	private ArrayAdapter<String> listAdapter;
-	// private ImageView recordingButton;
 	private ToggleButton recordingButton;
 	private ListView sensorList;
 
@@ -128,10 +130,8 @@ public class SensorLoggerMainActivity extends Activity {
 	private void initUI() {
 		sensorList = (ListView) findViewById(R.id.sensorList);
 		sensorList.setOnItemClickListener(listViewClickListener);
-		// sensorList.addHeaderView(findViewById(R.id.headerId));
 		listAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1);
 		sensorList.setAdapter(listAdapter);
-		// recordingButton = (ImageView) findViewById(R.id.recordingButton);
 		recordingButton = (ToggleButton) findViewById(R.id.recordingButton);
 		updateSensorList();
 	}
@@ -141,15 +141,21 @@ public class SensorLoggerMainActivity extends Activity {
 	 */
 
 	public void toggleRecording(final View view) {
-		Log.i(TAG, "[Main] toggleRecording called.");
 		if (RecorderService.isRunning()) {
 			stopService();
 			recordingButton.setSelected(false);
-			// recordingButton.setImageResource(R.drawable.recorddisabled);
 		} else {
-			startService();
-			recordingButton.setSelected(true);
-			// recordingButton.setImageResource(R.drawable.recordpressed);
+			final String[] items = getResources().getStringArray(R.array.activities);
+			final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+			builder.setTitle("Pick an activity");
+			builder.setItems(items, new DialogInterface.OnClickListener() {
+				public void onClick(final DialogInterface dialog, final int item) {
+					startService(items[item]);
+					recordingButton.setSelected(true);
+				}
+			});
+			final AlertDialog alert = builder.create();
+			alert.show();
 		}
 	}
 
@@ -172,8 +178,9 @@ public class SensorLoggerMainActivity extends Activity {
 	 * 
 	 * @return the new recording status - always true after starting
 	 */
-	private boolean startService() {
+	private boolean startService(final String activity) {
 		final Intent intent = new Intent(SensorLoggerMainActivity.this, RecorderService.class);
+		intent.putExtra(ApplicationConstants.INTENT_ACTIVITY, activity);
 		startService(intent);
 		return true;
 	}

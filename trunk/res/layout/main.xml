@@ -13,7 +13,7 @@
 	</FrameLayout>
 
 	<TextView android:id="@+id/headerId" android:layout_width="fill_parent"
-		android:layout_height="wrap_content" android:text="Active Sensors:" />
+		android:layout_height="wrap_content" android:text="Selected Sensors:" />
 
 	<LinearLayout android:layout_height="fill_parent"
 		android:layout_width="fill_parent" android:orientation="horizontal"

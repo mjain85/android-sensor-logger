@@ -31,7 +31,7 @@ public class PreferencesActivity extends PreferenceActivity {
 		}
 
 		final PreferenceCategory categoryRate = (PreferenceCategory) getPreferenceManager().findPreference(
-				ApplicationConstants.PREF_RATE_CAT);
+				ApplicationConstants.PREF_LOGGING_CAT);
 		final ListPreference rate = new ListPreference(this);
 		rate.setKey(ApplicationConstants.PREF_RATE);
 		rate.setTitle(R.string.logging_rate);
