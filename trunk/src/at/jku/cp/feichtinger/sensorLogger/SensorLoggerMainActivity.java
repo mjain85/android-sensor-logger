@@ -1,5 +1,6 @@
 package at.jku.cp.feichtinger.sensorLogger;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
@@ -8,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Bundle;
@@ -23,10 +25,12 @@ import android.widget.ListView;
 import android.widget.ToggleButton;
 import at.jku.cp.feichtinger.sensorLogger.activities.ActivityManagerActivity;
 import at.jku.cp.feichtinger.sensorLogger.activities.PreferencesActivity;
+import at.jku.cp.feichtinger.sensorLogger.db.DatabaseAdapter;
 import at.jku.cp.feichtinger.sensorLogger.services.RecorderService;
 
 public class SensorLoggerMainActivity extends Activity {
 	private static final String TAG = "at.jku.cp.feichtinger.sensorLogger.SensorLoggerMainActivity";
+	private DatabaseAdapter dbAdapter;
 	private ArrayAdapter<String> listAdapter;
 	private ToggleButton recordingButton;
 	private ListView sensorList;
@@ -93,7 +97,8 @@ public class SensorLoggerMainActivity extends Activity {
 	public void onCreate(final Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-
+		dbAdapter = new DatabaseAdapter(this);
+		dbAdapter.open();
 		initUI();
 	}
 
@@ -147,12 +152,20 @@ public class SensorLoggerMainActivity extends Activity {
 			stopService();
 			recordingButton.setSelected(false);
 		} else {
-			final String[] items = getResources().getStringArray(R.array.activities);
+			final Cursor cur = dbAdapter.fetchAllActivities();
+			final List<String> items = new ArrayList<String>();
+			cur.moveToFirst();
+			while (!cur.isAfterLast()) {
+				items.add(cur.getString(1));
+				cur.moveToNext();
+			}
+			items.add("misc");
+
 			final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 			builder.setTitle("Pick an activity");
-			builder.setItems(items, new DialogInterface.OnClickListener() {
+			builder.setItems(items.toArray(new String[1]), new DialogInterface.OnClickListener() {
 				public void onClick(final DialogInterface dialog, final int item) {
-					startService(items[item]);
+					startService(items.get(item));
 					recordingButton.setSelected(true);
 				}
 			});
