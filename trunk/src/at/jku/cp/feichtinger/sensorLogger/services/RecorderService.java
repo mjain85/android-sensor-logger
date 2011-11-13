@@ -126,7 +126,8 @@ public class RecorderService extends Service {
 			for (final Sensor sensor : sensorList) {
 				if (prefs.getBoolean(sensor.getName(), false)) {
 					final LinkedBlockingQueue<SensorEvent> dataQueue = new LinkedBlockingQueue<SensorEvent>();
-					final Thread consumer = new Thread(new Consumer(dataQueue, getFileName(sensor.getName())));
+					final Thread consumer = new Thread(new Consumer(sensor.getName(), dataQueue,
+							getFileName(sensor.getName())));
 
 					data.put(sensor.getType(), dataQueue);
 					sensors.put(sensor.getType(), sensor);
@@ -226,9 +227,11 @@ public class RecorderService extends Service {
 		private final BlockingQueue<SensorEvent> queue;
 		private BufferedWriter out;
 
-		public Consumer(final BlockingQueue<SensorEvent> queue, final String fileName) throws IOException {
+		public Consumer(final String sensorName, final BlockingQueue<SensorEvent> queue, final String fileName)
+				throws IOException {
 			this.setFile(fileName);
 			this.queue = queue;
+			out.write("# Sensor: " + sensorName);
 			out.write("# Logged activity: " + activity + "\n");
 		}
 
@@ -280,9 +283,7 @@ public class RecorderService extends Service {
 		}
 
 		private String toCSVString(final SensorEvent event) {
-			// nano-seconds are too fine grained --> convert it to
-			// milli-seconds.
-			return (event.timestamp / (1000 * 1000) - startTime) + "," + event.values[0] + ", " + event.values[1] + ","
+			return (event.timestamp - startTime) + "," + event.values[0] + ", " + event.values[1] + ","
 					+ event.values[2] + "\n";
 		}
 	}
